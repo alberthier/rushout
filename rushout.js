@@ -253,6 +253,7 @@ class Solver {
                     movesList.splice(0, 0, {board: thisBoard, car: state.car, move: state.move});
                     thisBoard = state.parent;
                 }
+                movesList.splice(0, 0, {board: this.board, car: null, move: null});
                 return movesList;
             }
             for (let move of board.findPossibleMoves()) {
@@ -298,10 +299,10 @@ class BoardView {
         this.controls.appendChild(toPreviousButton);
         toPreviousButton.textContent = "\u2595\u25c0";
         toPreviousButton.addEventListener("click", this.toPrevious);
-        const togglePlayPauseButton = document.createElement("button");
-        this.controls.appendChild(togglePlayPauseButton);
-        togglePlayPauseButton.textContent = "\u25b6 \u258e\u258e";
-        togglePlayPauseButton.addEventListener("click", this.togglePlayPause);
+        this.togglePlayPauseButton = document.createElement("button");
+        this.controls.appendChild(this.togglePlayPauseButton);
+        this.togglePlayPauseButton.textContent = "\u25b6";
+        this.togglePlayPauseButton.addEventListener("click", this.togglePlayPause);
         const toNextButton = document.createElement("button");
         this.controls.appendChild(toNextButton);
         toNextButton.textContent = "\u25b6\u258f";
@@ -324,6 +325,12 @@ class BoardView {
             this.carElements[id] = carElement;
             this.baseBoard.appendChild(carElement);
         }
+
+        const outArrow = document.createElement("div");
+        this.baseBoard.appendChild(outArrow);
+        outArrow.classList.add("arrow-out");
+        outArrow.style.top = (2 * BOARD_CELL_SIZE) + "px";
+        outArrow.style.left = (6 * BOARD_CELL_SIZE) + "px";
     }
 
     update = (board) => {
@@ -355,6 +362,9 @@ class BoardView {
         }
         if (this.solution) {
             for (let move of this.solution) {
+                if (move.car === null) {
+                    continue;
+                }
                 let solutionElt = move.car.id;
                 if (move.move > 0) {
                     solutionElt += "+";
@@ -364,7 +374,6 @@ class BoardView {
                 span.textContent = solutionElt;
                 this.log.appendChild(span);
             }
-            this.showSolutionStep();
         }
     }
 
@@ -398,8 +407,10 @@ class BoardView {
     togglePlayPause = () => {
         this.playing = !this.playing;
         if (!this.playing) {
+            this.togglePlayPauseButton.textContent = "\u25b6";
             clearTimeout(this.animationTimer);
         } else {
+            this.togglePlayPauseButton.textContent = "\u258e\u258e";
             this.showSolutionStep();
         }
     }
