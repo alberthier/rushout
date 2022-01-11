@@ -80,13 +80,11 @@ class Board {
     }
 
     loadBoard = (boardText) => {
-        const lines = boardText.split("\n");
         const cars = {};
 
-        for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-            const line = lines[lineIdx];
-            for (let cellIdx = 0; cellIdx < line.length; cellIdx++) {
-                const cell = line[cellIdx];
+        for (let lineIdx = 0; lineIdx < 6; lineIdx++) {
+            for (let cellIdx = 0; cellIdx < 6; cellIdx++) {
+                const cell = boardText[lineIdx * 6 + cellIdx];
                 if (cell != ".") {
                     if (cell in cars) {
                         const car = cars[cell];
@@ -374,10 +372,18 @@ class BoardView {
                 span.textContent = solutionElt;
                 this.log.appendChild(span);
             }
+        } else {
+            const msg = document.createElement("span")
+            msg.classList.add("text");
+            msg.textContent = "No solution :("
+            this.log.appendChild(msg);
         }
     }
 
     toStep = (step) => {
+        if (!this.solution) {
+            return;
+        }
         this.solutionStep = step;
         this.playing = false;
         clearTimeout(this.animationTimer);
@@ -405,6 +411,9 @@ class BoardView {
     }
 
     togglePlayPause = () => {
+        if (!this.solution) {
+            return;
+        }
         this.playing = !this.playing;
         if (!this.playing) {
             this.togglePlayPauseButton.textContent = "\u25b6";
@@ -453,11 +462,11 @@ class BoardEditor {
         this.editor.classList.add("editor");
         this.editor.setAttribute("placeholder", "......\n......\n......\n......\n......\n......")
         this.editor.value =
-            "AA.OOO\n" +
-            "...CBB\n" +
-            "DXXC.Q\n" +
-            "D.PFFQ\n" +
-            "EEP..Q\n" +
+            "AA.OOO" +
+            "...CBB" +
+            "DXXC.Q" +
+            "D.PFFQ" +
+            "EEP..Q" +
             "..PRRR"
         this.element.appendChild(this.editor);
 
@@ -484,31 +493,62 @@ class BoardEditor {
         }
     }
 
+    getBoardString = () => {
+        let boardString = this.editor.value;
+        boardString = boardString.replace("\n", "");
+        boardString = boardString.replace(" ", "");
+        return boardString.substring(0, 36);
+    }
+
     build = () => {
         const board = new Board(6, 6);
-        board.loadBoard(this.editor.value);
+        board.loadBoard(this.getBoardString());
         return board;
     }
 }
 
+function loadUrlBoardString() {
+    const boardString = location.hash.length !== 0 ? location.hash.substring(1) : null;
+    const board = new Board(6, 6);
+    try {
+        board.loadBoard(boardString);
+        return board;
+    } catch {
+        return null;
+    }
+}
 
 function main() {
     const root = document.getElementById("app");
 
+    const urlBoard = loadUrlBoardString();
+
     const boardEditor = new BoardEditor(root)
-    boardEditor.isVisible = true;
+    boardEditor.isVisible = urlBoard == null;
 
     const boardView = new BoardView(root);
-    boardView.isVisible = false;
+    boardView.isVisible = !boardEditor.isVisible;
+
+    const runSolver = (board) => {
+        const solver = new Solver(board);
+        const solution = solver.solve();
+        boardView.showSolution(solution);
+        if (solution) {
+            boardView.togglePlayPause();
+        } else {
+            boardView.update(board);
+        }
+    }
+
+    if (urlBoard !== null) {
+        runSolver(urlBoard);
+    }
 
     boardEditor.button.addEventListener("click", () => {
         boardEditor.isVisible = false;
         boardView.isVisible = true;
-        const solver = new Solver(boardEditor.build());
-        const solution = solver.solve();
-        boardView.showSolution(solution);
-        boardView.togglePlayPause();
-
+        location.hash = "#" + boardEditor.getBoardString();
+        runSolver(boardEditor.build());
     });
 }
 
