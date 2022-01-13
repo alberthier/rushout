@@ -37,12 +37,19 @@ html, body {
 
 .editor {
     width: 6ch;
-    height: 12ch;
+    height: 13ch;
     font-size: 36pt;
     font-family: monospace;
     border: 1px solid #888;
     outline: none;
     resize: none;
+    overflow: hidden;
+}
+
+.editor-link {
+    margin-left: 8px;
+    margin-right: auto;
+    margin-bottom: 16px;
 }
 
 .board {

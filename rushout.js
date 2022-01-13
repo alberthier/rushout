@@ -281,6 +281,13 @@ class BoardView {
         this.root.appendChild(this.element);
         this.element.classList.add("vbox");
 
+        const editorLink = document.createElement("a");
+        this.element.appendChild(editorLink);
+        editorLink.href = "index.html";
+        editorLink.textContent = "< Editor";
+        editorLink.classList.add("text", "editor-link");
+
+
         this.baseBoard = document.createElement("div")
         this.element.appendChild(this.baseBoard);
         this.baseBoard.classList.add("board");
